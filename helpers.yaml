@@ -1,0 +1,39 @@
+# Helper entities for Motion-Activated Lighting System
+# Corridoio (Hallway) Example
+# Part of the Home Assistant motion lighting solution
+# Repository: [Your GitHub URL]
+
+# ============================================
+# INPUT BOOLEANS
+# ============================================
+
+input_boolean:
+  # Motion automation control
+  motion_corridio:
+    name: Motion Corridio Helper
+    icon: mdi:motion-sensor
+    initial: off
+
+  # Night mode switch
+  night_mode_corridio:
+    name: Corridio Night Mode
+    icon: mdi:weather-night
+    initial: off
+
+# ============================================
+# USAGE
+# ============================================
+# 
+# Motion Helper Boolean (motion_corridio):
+#   - Set to 'on' by any automation that turns on lights automatically
+#   - Set to 'off' by user interaction or after turning lights off
+#   - Checked by turn-off automation to decide if it should proceed
+#
+# Night Mode Switch (night_mode_corridio):
+#   - Controls Adaptive Lighting behavior at night
+#   - Typically used to tune Adaptive Lighting to red/warm colors
+#   - Can be automated based on time or controlled manually
+#   - For bedrooms: can disable motion lighting entirely
+#   - For corridors/bathrooms: adjusts lighting to night-friendly colors
+#
+# ============================================

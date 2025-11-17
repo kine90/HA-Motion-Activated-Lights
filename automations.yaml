@@ -1,0 +1,139 @@
+# Motion-Activated Lighting Automations for Corridoio (Hallway)
+# Part of the Home Assistant motion lighting solution
+# Repository: [Your GitHub URL]
+
+# ============================================
+# 1. TURN ON AUTOMATION
+# ============================================
+# Triggered by the filtered occupancy sensor
+# Only activates when room is dark and lights are off
+
+- id: motion_corridio_on
+  alias: Motion Corridio ON
+  description: 'Turn on corridor lights when presence detected in dark conditions'
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.ep1_corridio_occupancy_filtered
+      to: 'on'
+  conditions:
+    - condition: state
+      entity_id: light.luci_corridoio
+      state: 'off'
+    - condition: state
+      state: 'on'
+      entity_id: binary_sensor.home_presence
+  actions:
+    - action: adaptive_lighting.apply
+      data:
+        entity_id: switch.adaptive_lighting_dafault_adaptive_light
+        lights:
+          - light.luci_corridoio
+        adapt_color: true
+        turn_on_lights: true
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.motion_corridio
+
+# ============================================
+# 2. TURN OFF AUTOMATION
+# ============================================
+# Triggered by the raw occupancy sensor going off
+# Only turns off if helper boolean indicates automatic control
+
+- id: motion_corridio_off
+  alias: Motion Corridio OFF
+  description: 'Turn off corridor lights when no presence detected for 30 seconds'
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.ep1_corridio_occupancy_raw
+      to: 'off'
+      for:
+        hours: 0
+        minutes: 0
+        seconds: 30
+  conditions:
+    - condition: state
+      entity_id: input_boolean.motion_corridio
+      state: 'on'
+  actions:
+    - action: homeassistant.turn_off
+      target:
+        entity_id: light.luci_corridoio
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.motion_corridio
+
+# ============================================
+# 3. USER INTERACTION AUTOMATION
+# ============================================
+# Detects manual control and resets helper boolean
+# Allows users to regain manual control at any time
+
+- id: corridio_reset_helper_on_user_interaction
+  alias: Corridio - Reset helper if Light Turned On by User
+  description: 'Reset automation helper when user manually controls lights'
+  triggers:
+    - entity_id:
+        - light.luci_corridoio
+        - light.spot_1
+        - light.spot_2
+        - light.spot_3
+      trigger: state
+  conditions:
+    - condition: template
+      value_template: '{{ trigger.to_state.context.user_id is not none }}'
+  actions:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.motion_corridio
+
+# ============================================
+# 4. DOOR TRIGGER AUTOMATION (BONUS)
+# ============================================
+# Example of multiple automations using the same helper
+# Turns on light when entrance door opens
+
+- id: luce_porta_ingresso
+  alias: Luce Porta Ingresso
+  description: 'Turn on corridor light when entrance door opens'
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.porta_ingresso
+      to: 'on'
+  actions:
+    - action: light.turn_on
+      data:
+        brightness_pct: 100
+        kelvin: 4010
+        transition: 1
+      target:
+        entity_id: light.spot_1
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.motion_corridio
+
+# ============================================
+# REQUIRED HELPER
+# ============================================
+# Add this to your configuration.yaml or helpers section:
+#
+# input_boolean:
+#   motion_corridio:
+#     name: Motion Corridio Helper
+#     icon: mdi:motion-sensor
+#
+# ============================================
+# REQUIRED ENTITIES
+# ============================================
+# This automation requires the following entities to exist:
+# - binary_sensor.ep1_corridio_occupancy_filtered (from EP1 ESPHome)
+# - binary_sensor.ep1_corridio_occupancy_raw (from EP1 ESPHome)
+# - light.luci_corridoio (your corridor lights)
+# - light.spot_1, light.spot_2, light.spot_3 (individual spots)
+# - binary_sensor.home_presence (your home/away sensor)
+# - binary_sensor.porta_ingresso (entrance door sensor)
+# - switch.adaptive_lighting_dafault_adaptive_light (Adaptive Lighting integration)
+# - input_boolean.motion_corridio (helper boolean)
